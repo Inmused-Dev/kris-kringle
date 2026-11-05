@@ -1,0 +1,10 @@
+{
+  "slug": "wesley",
+  "title": "Family Kris Kringle",
+  "people": ["Nanna", "Glen", "Tamsin", "Zoe", "Ellie", "Junia", "Lauren", "Brent", "Payton"],
+  "blocked": [
+    ["Glen", "Tamsin"], ["Tamsin", "Glen"],
+    ["Brent", "Lauren"], ["Lauren", "Brent"],
+    ["Payton", "Brent"]
+  ]
+}

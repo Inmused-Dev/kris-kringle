@@ -1,0 +1,21 @@
+# Serves site/ inside the container. Public TLS is Cloudflare's; armature-caddy reaches this over
+# plain HTTP on armature-prod, exactly as it does every other app on vps-inmused.
+{
+	auto_https off
+	admin off
+}
+
+:80 {
+	respond /healthz "kris-kringle ok" 200
+	root * /srv
+	header {
+		# The slip key lives in the URL fragment, which browsers never send. These keep the page
+		# itself out of search engines, caches and other sites' Referer logs anyway.
+		X-Robots-Tag "noindex, nofollow"
+		Referrer-Policy no-referrer
+		Cache-Control "no-store"
+		X-Content-Type-Options nosniff
+		-Server
+	}
+	file_server
+}
