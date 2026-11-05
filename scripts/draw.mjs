@@ -16,6 +16,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { webcrypto as crypto } from "node:crypto";
 
 const BASE_URL = "https://christmas.inmused.com";
+const PAD = 96; // bytes of plaintext per slip, before encryption
 const [slug, flag] = process.argv.slice(2);
 if (!slug) { console.error("usage: node scripts/draw.mjs <slug> [--force]"); process.exit(2); }
 
@@ -58,7 +59,11 @@ for (let i = 0; i < people.length; i++) {
   const raw = crypto.getRandomValues(new Uint8Array(16));
   const key = await crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt"]);
   const iv = crypto.getRandomValues(new Uint8Array(12));
-  const pt = new TextEncoder().encode(JSON.stringify({ g: people[i], r: recipients[i] }));
+  // Padded to a fixed size: AES-GCM keeps the plaintext length, so unpadded slips would leak
+  // len(giver) + len(recipient). JSON.parse ignores the trailing spaces.
+  const json = JSON.stringify({ g: people[i], r: recipients[i] });
+  if (json.length > PAD) { console.error(`names too long for a ${PAD}-byte slip`); process.exit(1); }
+  const pt = new TextEncoder().encode(json.padEnd(PAD));
   const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, pt));
   entries.push({ iv: b64u(iv), ct: b64u(ct) });
   links.push(`${people[i]}: ${BASE_URL}/${slug}/#${b64u(raw)}`);
